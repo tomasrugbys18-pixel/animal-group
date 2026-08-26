@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan de Entrenamiento - Animal Group</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
+        body { background-color: #0b0c10; color: #e2e8f0; padding: 20px; max-width: 900px; margin: 0 auto; padding-bottom: 100px; }
+        .top-bar { height: 4px; background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899); border-radius: 2px; margin-bottom: 20px; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .header-logo-container { display: flex; align-items: center; gap: 14px; }
+
+        .badge { background: #3b82f6; color: #fff; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        h1 { font-size: 22px; font-weight: 900; text-transform: uppercase; margin-top: 2px; }
+        
+        /* Pantalla de Login */
+        #login-screen { display: flex; justify-content: center; align-items: center; min-height: 60vh; }
+        .login-card { background: #151923; border: 1px solid #232936; border-radius: 12px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; }
+        .login-card h2 { margin-bottom: 20px; font-size: 20px; text-transform: uppercase; color: #fff; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 5px; }
+        .form-input { width: 100%; padding: 12px; background: #0f1219; border: 1px solid #232936; border-radius: 6px; color: #fff; font-size: 14px; }
+        .form-input:focus { border-color: #3b82f6; outline: none; }
+        .btn-login { width: 100%; padding: 12px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; border: none; border-radius: 6px; font-weight: 800; text-transform: uppercase; cursor: pointer; margin-top: 10px; font-size: 13px; }
+        .btn-login:hover { opacity: 0.9; }
+        .error-msg { color: #ef4444; font-size: 12px; margin-top: 10px; display: none; font-weight: 600; }
+
+        /* Contenido de la rutina */
+        #app-content { display: none; }
+
+        .user-card { background: #151923; border: 1px solid #232936; border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .user-card strong { color: #fff; }
+        .alumno-title { font-size: 15px; color: #60a5fa; font-weight: 800; }
+        .save-status { font-size: 11px; color: #22c55e; font-weight: 700; margin-left: 10px; display: none; }
+        .btn-logout { background: #ef4444; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; }
+
+        .nav-tabs-wrapper { display: flex; gap: 8px; align-items: center; margin-bottom: 20px; }
+        .nav-tabs { display: flex; gap: 8px; overflow-x: auto; flex: 1; padding-bottom: 5px; }
+        .tab-btn { padding: 10px 16px; background: #151923; border: 1px solid #232936; color: #64748b; font-weight: 800; font-size: 12px; border-radius: 6px; cursor: pointer; text-transform: uppercase; min-width: 120px; text-align: center; }
+        .tab-btn.active { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; border-color: #3b82f6; }
+
+        .block { margin-bottom: 20px; border: 1px solid #232936; border-radius: 8px; overflow: hidden; background: #0f1219; }
+        .block-header { background: #151923; border-left: 4px solid #3b82f6; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 800; text-transform: uppercase; }
+        .block-tag { color: #60a5fa; font-size: 11px; }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        th { background: #181d2a; color: #94a3b8; font-size: 11px; text-transform: uppercase; padding: 10px; border-bottom: 1px solid #232936; }
+        td { padding: 10px; border-bottom: 1px solid #1a202c; color: #cbd5e1; }
+        tr:last-child td { border-bottom: none; }
+        tr.completed { opacity: 0.5; text-decoration: line-through; }
+
+        .badge-num { background: #3b82f6; color: #fff; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; margin-right: 6px; }
+        .checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6; }
+        .input-carga { background: #1a202c; border: 1px solid #2d3748; color: #fff; padding: 6px 8px; border-radius: 6px; width: 80px; text-align: center; font-size: 12px; font-weight: 600; }
+        .input-carga:focus { border-color: #3b82f6; outline: none; }
+        
+        .btn-video { background: #2563eb; color: #fff; border: none; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-video:hover { background: #1d4ed8; }
+        .loading { text-align: center; padding: 40px; color: #60a5fa; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar"></div>
+
+    <header>
+        <div class="header-logo-container">
+            <div>
+                <span class="badge">ANIMAL GROUP SYSTEM</span>
+                <h1>Plan Semanal</h1>
+            </div>
+        </div>
+        <div style="text-align: right;">
+            <strong style="color: #3b82f6;">ELITE COACHING</strong>
+        </div>
+    </header>
+
+    <!-- PANTALLA DE ACCESO -->
+    <div id="login-screen">
+        <div class="login-card">
+            <h2>Acceso Alumnos</h2>
+            <div class="form-group">
+                <label>Usuario</label>
+                <input type="text" id="userInput" class="form-input" placeholder="Ej: tomas">
+            </div>
+            <div class="form-group">
+                <label>Código de Acceso</label>
+                <input type="password" id="passInput" class="form-input" placeholder="Ej: 1234">
+            </div>
+            <button class="btn-login" onclick="login()">Ingresar a mi rutina</button>
+            <div id="errorMsg" class="error-msg">Usuario o código incorrectos.</div>
+        </div>
+    </div>
+
+    <!-- CONTENIDO DE LA APLICACIÓN -->
+    <div id="app-content">
+        <div class="user-card">
+            <div>ALUMNO/A: <span id="nombre-alumno" class="alumno-title">Atleta</span> <span id="saveStatus" class="save-status">✓ Guardado</span></div>
+            <div><button class="btn-logout" onclick="logout()">Cerrar Sesión</button></div>
+        </div>
+
+        <div class="nav-tabs-wrapper">
+            <div class="nav-tabs" id="tabs-container"></div>
+        </div>
+
+        <div id="blocks-container"></div>
+    </div>
+
+    <script>
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbykXGY4TstdmaCRDH1yI-49TmRNUumDN6bj3bREFX91t1M6MZvlDIPQHefCGUpzP7oAHQ/exec";
+
+        let allData = [];
+        let routineDays = {};
+        let activeDay = "";
+
+        async function login() {
+            const userVal = document.getElementById('userInput').value.trim().toLowerCase();
+            const passVal = document.getElementById('passInput').value.trim();
+            const errorDiv = document.getElementById('errorMsg');
+
+            if (!userVal || !passVal) {
+                errorDiv.innerText = "Por favor completa ambos campos.";
+                errorDiv.style.display = "block";
+                return;
+            }
+
+            errorDiv.style.display = "none";
+
+            try {
+                const response = await fetch(WEB_APP_URL);
+                allData = await response.json();
+
+                const userRows = allData.filter(row => 
+                    String(row.usuario).trim().toLowerCase() === userVal && 
+                    String(row.codigo).trim() === passVal
+                );
+
+                if (userRows.length === 0) {
+                    errorDiv.innerText = "Usuario o código incorrectos.";
+                    errorDiv.style.display = "block";
+                    return;
+                }
+
+                let alumnoNombre = userRows[0].alumno || userVal;
+                document.getElementById('nombre-alumno').innerText = alumnoNombre;
+
+                routineDays = {};
+                userRows.forEach(row => {
+                    let dia = row.dia || "Día 1";
+                    let bloque = row.bloque || "Bloque 1";
+                    let tag = row.tag || "";
+                    
+                    if (!routineDays[dia]) routineDays[dia] = {};
+                    if (!routineDays[dia][bloque]) routineDays[dia][bloque] = { tag: tag, exercises: [] };
+                    
+                    routineDays[dia][bloque].exercises.push({
+                        rowIndex: row.rowIndex,
+                        num: row.num,
+                        name: row.ejercicio,
+                        series: row.series,
+                        reps: row.reps,
+                        carga: row.carga || "",
+                        video: row.video
+                    });
+                });
+
+                const daysList = Object.keys(routineDays);
+                if (daysList.length > 0) {
+                    activeDay = daysList[0];
+                }
+
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-content').style.display = 'block';
+                render();
+
+            } catch (error) {
+                errorDiv.innerText = "Error de conexión con Google Sheets.";
+                errorDiv.style.display = "block";
+            }
+        }
+
+        async function actualizarCarga(rowIndex, nuevaCargaInput) {
+            const valorCarga = nuevaCargaInput.value;
+            const statusIndicator = document.getElementById('saveStatus');
+            
+            try {
+                await fetch(WEB_APP_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ rowIndex: rowIndex, carga: valorCarga })
+                });
+
+                statusIndicator.style.display = "inline";
+                setTimeout(() => {
+                    statusIndicator.style.display = "none";
+                }, 2000);
+            } catch (err) {
+                console.error("Error al guardar la carga", err);
+            }
+        }
+
+        function logout() {
+            document.getElementById('app-content').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('userInput').value = '';
+            document.getElementById('passInput').value = '';
+            routineDays = {};
+            activeDay = "";
+        }
+
+        function render() {
+            const daysList = Object.keys(routineDays);
+            const tabsContainer = document.getElementById('tabs-container');
+            tabsContainer.innerHTML = '';
+            
+            daysList.forEach(day => {
+                const btn = document.createElement('button');
+                btn.className = `tab-btn ${day === activeDay ? 'active' : ''}`;
+                btn.innerText = day;
+                btn.onclick = () => { activeDay = day; render(); };
+                tabsContainer.appendChild(btn);
+            });
+
+            const blocksContainer = document.getElementById('blocks-container');
+            blocksContainer.innerHTML = '';
+
+            if (activeDay && routineDays[activeDay]) {
+                const blocks = routineDays[activeDay];
+                Object.keys(blocks).forEach(blockName => {
+                    const blockData = blocks[blockName];
+                    const blockDiv = document.createElement('div');
+                    blockDiv.className = 'block';
+                    
+                    let rowsHtml = '';
+                    blockData.exercises.forEach(ex => {
+                        rowsHtml += `
+                            <tr>
+                                <td style="text-align: center;"><input type="checkbox" class="checkbox" onclick="toggleRow(this)"></td>
+                                <td>
+                                    <span class="badge-num">${ex.num}</span> 
+                                    <span>${ex.name}</span>
+                                </td>
+                                <td style="text-align: center;">${ex.series}</td>
+                                <td style="text-align: center;">${ex.reps}</td>
+                                <td style="text-align: center;"><input type="text" class="input-carga" value="${ex.carga}" placeholder="Kg" onchange="actualizarCarga(${ex.rowIndex}, this)"></td>
+                                <td style="text-align: center;"><a href="${ex.video}" target="_blank" class="btn-video">▶ Ver</a></td>
+                            </tr>
+                        `;
+                    });
+
+                    blockDiv.innerHTML = `
+                        <div class="block-header">
+                            <span>${blockName}</span>
+                            <span class="block-tag">${blockData.tag}</span>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px; text-align: center;">✓</th>
+                                    <th>Ejercicio</th>
+                                    <th style="text-align: center;">Series</th>
+                                    <th style="text-align: center;">Reps</th>
+                                    <th style="text-align: center;">Carga</th>
+                                    <th style="text-align: center;">Vídeo</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    `;
+                    blocksContainer.appendChild(blockDiv);
+                });
+            }
+        }
+
+        function toggleRow(checkbox) { 
+            checkbox.closest('tr').classList.toggle('completed', checkbox.checked); 
+        }
+    </script>
+</body>
+</html>
