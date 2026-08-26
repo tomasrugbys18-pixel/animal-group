@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan de Entrenamiento - Animal Group</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
+        body { background-color: #0b0c10; color: #e2e8f0; padding: 20px; max-width: 900px; margin: 0 auto; padding-bottom: 100px; }
+        .top-bar { height: 4px; background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899); border-radius: 2px; margin-bottom: 20px; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header-logo-container { display: flex; align-items: center; gap: 14px; }
+
+        .badge { background: #3b82f6; color: #fff; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        h1 { font-size: 22px; font-weight: 900; text-transform: uppercase; margin-top: 2px; }
+        
+        .user-card { background: #151923; border: 1px solid #232936; border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .user-card strong { color: #fff; }
+
+        .nav-tabs-wrapper { display: flex; gap: 8px; align-items: center; margin-bottom: 20px; }
+        .nav-tabs { display: flex; gap: 8px; overflow-x: auto; flex: 1; padding-bottom: 5px; }
+        .tab-btn { padding: 10px 16px; background: #151923; border: 1px solid #232936; color: #64748b; font-weight: 800; font-size: 12px; border-radius: 6px; cursor: pointer; text-transform: uppercase; min-width: 120px; text-align: center; }
+        .tab-btn.active { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; border-color: #3b82f6; }
+
+        .block { margin-bottom: 20px; border: 1px solid #232936; border-radius: 8px; overflow: hidden; background: #0f1219; }
+        .block-header { background: #151923; border-left: 4px solid #3b82f6; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 800; text-transform: uppercase; }
+        .block-tag { color: #60a5fa; font-size: 11px; }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        th { background: #181d2a; color: #94a3b8; font-size: 11px; text-transform: uppercase; padding: 10px; border-bottom: 1px solid #232936; }
+        td { padding: 10px; border-bottom: 1px solid #1a202c; color: #cbd5e1; }
+        tr:last-child td { border-bottom: none; }
+        tr.completed { opacity: 0.5; text-decoration: line-through; }
+
+        .badge-num { background: #3b82f6; color: #fff; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; margin-right: 6px; }
+        .checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6; }
+        .btn-video { background: #2563eb; color: #fff; border: none; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-video:hover { background: #1d4ed8; }
+        .loading { text-align: center; padding: 40px; color: #60a5fa; font-weight: 700; }
+
+        @media (max-width: 600px) {
+            td, th { padding: 8px 4px; font-size: 11px; }
+            h1 { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar"></div>
+
+    <header>
+        <div class="header-logo-container">
+            <div>
+                <span class="badge">GOOGLE SHEETS SYNC</span>
+                <h1>Plan Semanal</h1>
+            </div>
+        </div>
+        <div style="text-align: right;">
+            <strong style="color: #3b82f6;">ANIMAL GROUP</strong>
+        </div>
+    </header>
+
+    <div class="user-card">
+        <div>ESTADO: <strong style="color: #22c55e;">Sincronizado con Google Sheets</strong></div>
+    </div>
+
+    <div class="nav-tabs-wrapper">
+        <div class="nav-tabs" id="tabs-container"></div>
+    </div>
+
+    <div id="blocks-container">
+        <div class="loading">Cargando rutina desde Google Sheets...</div>
+    </div>
+
+    <script>
+        // TU URL DE GOOGLE APPS SCRIPT
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzTy0IcL6kQJdOSjatFxDDJq7qVe7yz-83bnwBc4uxcnvfLtMD0HZD92pJKFVDin1PS/exec";
+
+        let routineDays = {};
+        let activeDay = "";
+
+        async function loadRoutine() {
+            try {
+                const response = await fetch(WEB_APP_URL);
+                const data = await response.json();
+                
+                routineDays = {};
+                data.forEach(row => {
+                    let dia = row.dia || "Día 1";
+                    let bloque = row.bloque || "Bloque 1";
+                    let tag = row.tag || "";
+                    
+                    if (!routineDays[dia]) routineDays[dia] = {};
+                    if (!routineDays[dia][bloque]) routineDays[dia][bloque] = { tag: tag, exercises: [] };
+                    
+                    routineDays[dia][bloque].exercises.push({
+                        num: row.num,
+                        name: row.ejercicio,
+                        series: row.series,
+                        reps: row.reps,
+                        video: row.video
+                    });
+                });
+
+                const daysList = Object.keys(routineDays);
+                if (daysList.length > 0 && !activeDay) {
+                    activeDay = daysList[0];
+                }
+                render();
+            } catch (error) {
+                document.getElementById('blocks-container').innerHTML = '<div class="loading" style="color: #ef4444;">Error al cargar los datos. Verifica tu Google Sheets y el Script.</div>';
+            }
+        }
+
+        function render() {
+            const daysList = Object.keys(routineDays);
+            const tabsContainer = document.getElementById('tabs-container');
+            tabsContainer.innerHTML = '';
+            
+            daysList.forEach(day => {
+                const btn = document.createElement('button');
+                btn.className = `tab-btn ${day === activeDay ? 'active' : ''}`;
+                btn.innerText = day;
+                btn.onclick = () => { activeDay = day; render(); };
+                tabsContainer.appendChild(btn);
+            });
+
+            const blocksContainer = document.getElementById('blocks-container');
+            blocksContainer.innerHTML = '';
+
+            if (activeDay && routineDays[activeDay]) {
+                const blocks = routineDays[activeDay];
+                Object.keys(blocks).forEach(blockName => {
+                    const blockData = blocks[blockName];
+                    const blockDiv = document.createElement('div');
+                    blockDiv.className = 'block';
+                    
+                    let rowsHtml = '';
+                    blockData.exercises.forEach(ex => {
+                        rowsHtml += `
+                            <tr>
+                                <td style="text-align: center;"><input type="checkbox" class="checkbox" onclick="toggleRow(this)"></td>
+                                <td>
+                                    <span class="badge-num">${ex.num}</span> 
+                                    <span>${ex.name}</span>
+                                </td>
+                                <td style="text-align: center;">${ex.series}</td>
+                                <td style="text-align: center;">${ex.reps}</td>
+                                <td style="text-align: center;"><a href="${ex.video}" target="_blank" class="btn-video">▶ Ver</a></td>
+                            </tr>
+                        `;
+                    });
+
+                    blockDiv.innerHTML = `
+                        <div class="block-header">
+                            <span>${blockName}</span>
+                            <span class="block-tag">${blockData.tag}</span>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px; text-align: center;">✓</th>
+                                    <th>Ejercicio</th>
+                                    <th style="text-align: center;">Series</th>
+                                    <th style="text-align: center;">Reps</th>
+                                    <th style="text-align: center;">Vídeo</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    `;
+                    blocksContainer.appendChild(blockDiv);
+                });
+            }
+        }
+
+        function toggleRow(checkbox) { 
+            checkbox.closest('tr').classList.toggle('completed', checkbox.checked); 
+        }
+
+        loadRoutine();
+    </script>
+</body>
+</html>
