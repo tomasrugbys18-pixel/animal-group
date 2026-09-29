@@ -442,6 +442,59 @@
         // de la hoja (así cada alumno puede ver un documento distinto).
         const PROGRESO_URL = "";
 
+        // PESTAÑA "PROGRESO" DE LA HOJA DE CÁLCULO.
+        // En la hoja: una columna con el nombre del alumno y otra con el enlace del documento.
+        // Luego: Archivo > Compartir > Publicar en la web > elegí SOLO la pestaña PROGRESO,
+        // formato "Valores separados por comas (.csv)" > Publicar, y pegá el enlace acá.
+        const PROGRESO_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSaCH4bqnd6z58l41xoHrZxb-IDK11XOLuFsBA8s2vYBra3BDvPG9PRhKwF9r9TFQigWenNglnajJKP/pub?gid=454098775&single=true&output=csv";
+
+        function normalizarNombre(t) {
+            return String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/\s+/g, " ");
+        }
+
+        function parseCSV(text) {
+            const rows = [];
+            let row = [], cell = "", inQ = false;
+            for (let i = 0; i < text.length; i++) {
+                const c = text[i];
+                if (inQ) {
+                    if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+                    else if (c === '"') inQ = false;
+                    else cell += c;
+                } else if (c === '"') inQ = true;
+                else if (c === ',') { row.push(cell); cell = ""; }
+                else if (c === '\n' || c === '\r') {
+                    if (c === '\r' && text[i + 1] === '\n') i++;
+                    row.push(cell); rows.push(row); row = []; cell = "";
+                } else cell += c;
+            }
+            if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+            return rows;
+        }
+
+        // Busca en la pestaña PROGRESO la fila cuyo nombre coincide con el usuario o el nombre del alumno.
+        // Si el alumno aparece más de una vez, se usa la última fila (la más reciente).
+        async function buscarProgresoEnHoja(nombres) {
+            if (!PROGRESO_CSV_URL) return "";
+            try {
+                const resp = await fetch(PROGRESO_CSV_URL);
+                if (!resp.ok) return "";
+                const filas = parseCSV(await resp.text());
+                const buscados = nombres.map(normalizarNombre).filter(Boolean);
+                let encontrado = "";
+                filas.forEach(celdas => {
+                    const link = celdas.map(c => c.trim()).find(c => /^https?:\/\//i.test(c));
+                    if (!link) return;
+                    const nombre = celdas.map(c => c.trim()).find(c => c && !/^https?:\/\//i.test(c));
+                    if (nombre && buscados.includes(normalizarNombre(nombre))) encontrado = link;
+                });
+                return encontrado;
+            } catch (e) {
+                console.error("No se pudo leer la pestaña PROGRESO", e);
+                return "";
+            }
+        }
+
         function abrirEncuesta() {
             const urlEncuesta = "https://docs.google.com/forms/d/e/1FAIpQLSfH2f1SLYZZ2KHHeMsVejrbFt0jGHB1OIMbTwHj7RhDp72wxA/viewform?usp=publish-editor";
             window.open(urlEncuesta, "_blank");
@@ -491,6 +544,8 @@
                 let alumnoNombre = userRows[0].alumno || currentUser;
                 const rowConProgreso = userRows.find(r => r.progreso && String(r.progreso).trim());
                 progressUrl = rowConProgreso ? String(rowConProgreso.progreso).trim() : PROGRESO_URL;
+                const urlDeHoja = await buscarProgresoEnHoja([currentUser, alumnoNombre]);
+                if (urlDeHoja) progressUrl = urlDeHoja;
                 document.getElementById('nombre-alumno').innerText = alumnoNombre;
 
                 routineDays = {};
