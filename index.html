@@ -211,6 +211,17 @@
         .btn-video:hover { background: #1d4ed8; }
 
         /* Barra de guardado flotante */
+        /* RPE */
+        .rpe-box { margin-bottom: 20px; border: 1px solid #232936; border-radius: 8px; background: #0f1219; overflow: hidden; }
+        .rpe-header { background: #151923; border-left: 4px solid #8b5cf6; padding: 10px 14px; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .rpe-body { padding: 14px; }
+        .rpe-hint { font-size: 12px; color: #94a3b8; margin-bottom: 12px; }
+        .rpe-scale { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+        .rpe-btn { background: #151923; color: #e2e8f0; border: 1px solid #232936; border-radius: 6px; padding: 10px 0; font-weight: 800; font-size: 14px; cursor: pointer; transition: all 0.15s; }
+        .rpe-btn:hover { border-color: #8b5cf6; }
+        .rpe-btn.selected { background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-color: transparent; color: #fff; }
+        .rpe-labels { display: flex; justify-content: space-between; font-size: 10px; color: #64748b; margin-top: 6px; text-transform: uppercase; font-weight: 700; }
+        @media (max-width: 480px) { .rpe-scale { grid-template-columns: repeat(5, 1fr); } }
         .save-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #151923; border-top: 1px solid #232936; padding: 15px; display: flex; justify-content: center; align-items: center; gap: 15px; box-shadow: 0 -5px 20px rgba(0,0,0,0.6); z-index: 1000; }
         .btn-save-all { background: linear-gradient(135deg, #22c55e, #15803d); color: #fff; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 900; font-size: 14px; text-transform: uppercase; cursor: pointer; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4); }
         .btn-save-all:hover { opacity: 0.9; }
@@ -396,8 +407,8 @@
 
         <!-- BARRA INFERIOR DE GUARDADO MANUAL -->
         <div class="save-bar">
-            <button class="btn-save-all" onclick="guardarTodoElHistorial()">💾 Guardar Mis Pesos</button>
-            <span id="saveMsg" class="save-msg">¡Pesos guardados con éxito! ✓</span>
+            <button class="btn-save-all" onclick="guardarTodoElHistorial()">💾 Guardar Mis Pesos y RPE</button>
+            <span id="saveMsg" class="save-msg">¡Pesos y RPE guardados con éxito! ✓</span>
         </div>
     </div>
 
@@ -408,6 +419,7 @@
         let routineDays = {};
         let activeDay = "";
         let currentUser = "";
+        let rpeByDay = {};
 
         function abrirEncuesta() {
             const urlEncuesta = "https://docs.google.com/forms/d/e/1FAIpQLSfH2f1SLYZZ2KHHeMsVejrbFt0jGHB1OIMbTwHj7RhDp72wxA/viewform?usp=publish-editor";
@@ -503,6 +515,19 @@
                 });
             });
 
+            // RPE de cada rutina (día). Se guarda junto a los pesos como un registro más
+            // y también como campo aparte por si el script de Google lo quiere leer.
+            let rpeData = [];
+            Object.keys(rpeByDay).forEach(dia => {
+                if (rpeByDay[dia]) {
+                    rpeData.push({ dia: dia, rpe: rpeByDay[dia] });
+                    cargasData.push({
+                        ejercicio: "RPE - " + dia,
+                        carga: String(rpeByDay[dia])
+                    });
+                }
+            });
+
             try {
                 await fetch(WEB_APP_URL, {
                     method: "POST",
@@ -510,7 +535,8 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ 
                         usuario: currentUser, 
-                        registros: cargasData 
+                        registros: cargasData,
+                        rpe: rpeData
                     })
                 });
 
@@ -531,6 +557,7 @@
             document.getElementById('userInput').value = '';
             document.getElementById('passInput').value = '';
             routineDays = {};
+            rpeByDay = {};
             activeDay = "";
             currentUser = "";
         }
@@ -600,7 +627,35 @@
                     `;
                     blocksContainer.appendChild(blockDiv);
                 });
+                blocksContainer.appendChild(renderRpeBox(activeDay));
             }
+        }
+
+        function setRpe(day, value) {
+            rpeByDay[day] = (rpeByDay[day] === value) ? null : value;
+            render();
+        }
+
+        function renderRpeBox(day) {
+            const current = rpeByDay[day];
+            let btns = '';
+            for (let i = 1; i <= 10; i++) {
+                btns += `<button type="button" class="rpe-btn ${current === i ? 'selected' : ''}" data-rpe="${i}">${i}</button>`;
+            }
+            const box = document.createElement('div');
+            box.className = 'rpe-box';
+            box.innerHTML = `
+                <div class="rpe-header">RPE · ${day}</div>
+                <div class="rpe-body">
+                    <div class="rpe-hint">Del 1 al 10, ¿qué tan intenso te resultó este entrenamiento?</div>
+                    <div class="rpe-scale">${btns}</div>
+                    <div class="rpe-labels"><span>1 · Muy suave</span><span>10 · Máximo esfuerzo</span></div>
+                </div>
+            `;
+            box.querySelectorAll('.rpe-btn').forEach(b => {
+                b.onclick = () => setRpe(day, parseInt(b.getAttribute('data-rpe'), 10));
+            });
+            return box;
         }
 
         function toggleRow(checkbox) { 
