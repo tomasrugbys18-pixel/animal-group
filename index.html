@@ -109,6 +109,30 @@
             box-shadow: 0 12px 30px rgba(139, 92, 246, 0.6);
         }
 
+        .btn-encuesta {
+            margin-top: 12px;
+            background: transparent;
+            color: #fff;
+            border: 1px solid #3b82f6;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 13px;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+            transition: all 0.3s ease;
+            text-align: center;
+            letter-spacing: 0.5px;
+            width: 100%;
+        }
+
+        .btn-encuesta:hover {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(59, 130, 246, 0.4);
+        }
+
         /* Tarjeta del formulario desplegable */
         .login-card { 
             display: none;
@@ -334,6 +358,7 @@
 
             <!-- Botón Inicial -->
             <button id="btnReady" class="btn-ready" onclick="mostrarLogin()">¿Estás listo para entrenar como un Animal?</button>
+             <button id="btnEncuesta" class="btn-encuesta" onclick="abrirEncuesta()">ENCUESTA</button>
 
             <!-- Tarjeta de Login Desplegable -->
             <div id="loginCard" class="login-card">
@@ -383,6 +408,11 @@
         let routineDays = {};
         let activeDay = "";
         let currentUser = "";
+
+        function abrirEncuesta() {
+            const urlEncuesta = "https://docs.google.com/forms/d/e/1FAIpQLSfH2f1SLYZZ2KHHeMsVejrbFt0jGHB1OIMbTwHj7RhDp72wxA/viewform?usp=publish-editor";
+            window.open(urlEncuesta, "_blank");
+        }
 
         function mostrarLogin() {
             document.getElementById('animalLogo').style.display = 'none';
