@@ -571,7 +571,7 @@
                 const btn = document.createElement('button');
                 btn.className = `tab-btn ${day === activeDay ? 'active' : ''}`;
                 btn.innerText = day;
-                btn.onclick = () => { activeDay = day; render(); };
+                btn.onclick = () => { activeDay = day; rpeByDay = {}; render(); };
                 tabsContainer.appendChild(btn);
             });
 
