@@ -449,33 +449,6 @@
         // formato "Valores separados por comas (.csv)" > Publicar, y pegá el enlace acá.
         const PROGRESO_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSaCH4bqnd6z58l41xoHrZxb-IDK11XOLuFsBA8s2vYBra3BDvPG9PRhKwF9r9TFQigWenNglnajJKP/pub?gid=454098775&single=true&output=csv";
 
-        // PRECARGA: se descargan los datos al abrir la página, mientras el alumno escribe usuario y código.
-        let datosPromise = null;
-        let datosPromiseHora = 0;
-        let csvProgresoPromise = null;
-
-        function precargarDatos() {
-            datosPromiseHora = Date.now();
-            datosPromise = fetch(WEB_APP_URL).then(r => r.json());
-            datosPromise.catch(() => { datosPromise = null; });
-        }
-
-        function obtenerDatos() {
-            // Si no hay precarga, falló, o tiene más de 5 minutos, se vuelve a descargar
-            if (!datosPromise || Date.now() - datosPromiseHora > 5 * 60 * 1000) precargarDatos();
-            return datosPromise;
-        }
-
-        function precargarProgreso() {
-            if (!PROGRESO_CSV_URL || csvProgresoPromise) return;
-            csvProgresoPromise = fetch(PROGRESO_CSV_URL)
-                .then(r => r.ok ? r.text() : "")
-                .catch(() => { csvProgresoPromise = null; return ""; });
-        }
-
-        precargarDatos();
-        precargarProgreso();
-
         function normalizarNombre(t) {
             return String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/\s+/g, " ");
         }
@@ -505,10 +478,9 @@
         async function buscarProgresoEnHoja(nombres) {
             if (!PROGRESO_CSV_URL) return "";
             try {
-                precargarProgreso();
-                const texto = await csvProgresoPromise;
-                if (!texto) return "";
-                const filas = parseCSV(texto);
+                const resp = await fetch(PROGRESO_CSV_URL);
+                if (!resp.ok) return "";
+                const filas = parseCSV(await resp.text());
                 const buscados = nombres.map(normalizarNombre).filter(Boolean);
                 let encontrado = "";
                 filas.forEach(celdas => {
@@ -556,7 +528,8 @@
             errorDiv.style.display = "none";
 
             try {
-                allData = await obtenerDatos();
+                const response = await fetch(WEB_APP_URL);
+                allData = await response.json();
 
                 const userRows = allData.filter(row => 
                     String(row.usuario).trim().toLowerCase() === currentUser && 
@@ -572,14 +545,8 @@
                 let alumnoNombre = userRows[0].alumno || currentUser;
                 const rowConProgreso = userRows.find(r => r.progreso && String(r.progreso).trim());
                 progressUrl = rowConProgreso ? String(rowConProgreso.progreso).trim() : PROGRESO_URL;
-                // El progreso se busca en segundo plano: no hace esperar al alumno
-                const usuarioAlBuscar = currentUser;
-                buscarProgresoEnHoja([currentUser, alumnoNombre]).then(urlDeHoja => {
-                    if (urlDeHoja && currentUser === usuarioAlBuscar) {
-                        progressUrl = urlDeHoja;
-                        if (showProgress) render();
-                    }
-                });
+                const urlDeHoja = await buscarProgresoEnHoja([currentUser, alumnoNombre]);
+                if (urlDeHoja) progressUrl = urlDeHoja;
                 document.getElementById('nombre-alumno').innerText = alumnoNombre;
 
                 routineDays = {};
